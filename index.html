@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mismatch — NL solar &amp; EV charging economics, 2026 vs 2027</title>
+<title>Solar &amp; EV after saldering — Dutch home energy simulator, 2026 vs 2027</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -34,6 +34,9 @@ h1,h2,h3{font-family:"Space Grotesk","IBM Plex Sans",sans-serif;margin:0;font-we
 }
 .masthead h1{font-size:22px}
 .masthead .sub{color:var(--muted); font-size:13px; max-width:62ch}
+.masthead .sub a{color:var(--ink-2); text-decoration:underline; text-underline-offset:2px}
+.masthead .sub a:hover{color:var(--ink)}
+.masthead .sub a:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
 .regime-flag{
   margin-left:auto; font-family:"IBM Plex Mono",monospace; font-size:11px;
   letter-spacing:0.08em; text-transform:uppercase; color:var(--muted);
@@ -161,16 +164,54 @@ tr.hl td{color:var(--ink); font-weight:600}
   color:var(--ink-2); font-size:12.5px; margin-top:16px; max-width:80ch;
 }
 .callout b{color:var(--ink); font-weight:600}
-.foot{color:var(--muted); font-size:11.5px; max-width:80ch; padding:0 28px 40px}
-.foot code{background:var(--panel-2); padding:1px 5px; border-radius:2px; font-size:11px}
+/* ---------- footer ---------- */
+.foot{border-top:1px solid var(--line); padding:26px 28px 44px; margin-top:8px}
+.foot h4{
+  font-family:"IBM Plex Mono",monospace; font-size:9.5px; font-weight:500;
+  letter-spacing:0.13em; text-transform:uppercase; color:var(--muted);
+  margin:0 0 8px;
+}
+.foot p{margin:0 0 9px; color:var(--muted); font-size:11.5px; line-height:1.65}
+.foot p:last-child{margin-bottom:0}
+.foot p a{color:var(--ink-2); text-decoration:underline; text-underline-offset:2px}
+.foot p a:hover{color:var(--ink)}
+.foot p a:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+
+.foot-cta{
+  display:flex; align-items:center; justify-content:space-between; gap:20px 28px;
+  flex-wrap:wrap; background:var(--panel); border:1px solid var(--line);
+  border-left:2px solid var(--solar); border-radius:var(--r);
+  padding:15px 18px; margin-bottom:24px; max-width:100ch;
+  color:var(--ink-2); font-size:12.5px; line-height:1.6;
+}
+.foot-cta > div{max-width:66ch}
+.foot-cta b{color:var(--ink); font-weight:600}
+.cta{
+  flex:none; color:var(--ink); text-decoration:none; white-space:nowrap;
+  font-family:"IBM Plex Mono",monospace; font-size:11px;
+  letter-spacing:0.08em; text-transform:uppercase;
+  border:1px solid var(--line-hi); border-radius:var(--r); padding:8px 13px;
+  transition:background .12s, border-color .12s;
+}
+.cta:hover{background:var(--panel-2); border-color:var(--focus)}
+.cta:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+
+.foot-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:22px 40px; max-width:100ch;
+}
+.foot-legal{
+  margin-top:22px; padding-top:14px; border-top:1px solid var(--line);
+  font-size:11px; max-width:100ch;
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
 </style>
 </head>
 <body>
 
 <div class="masthead">
-  <h1>Mismatch</h1>
-  <div class="sub">Dutch home solar &amp; EV charging economics. The car is away when the sun is up — this model puts a number on that.</div>
+  <h1>Solar &amp; EV, after saldering</h1>
+  <div class="sub">Dutch net metering ends on 1 January 2027 — and the car is usually away when the sun is up. This simulator puts numbers on what that mismatch costs a household, and what smart charging wins back. By <a href="https://www.linkedin.com/in/zakaria-jaiathe/" target="_blank" rel="noopener noreferrer">Zakaria Jaiathe</a>.</div>
   <div class="regime-flag" id="regimeFlag">regime · 2027</div>
 </div>
 
@@ -185,10 +226,6 @@ tr.hl td{color:var(--ink); font-weight:600}
         <button id="reg2026" onclick="setRegime(2026)" aria-pressed="false">2026 · saldering</button>
         <button id="reg2027" onclick="setRegime(2027)" aria-pressed="true">2027 · no saldering</button>
       </div>
-    </div>
-    <div class="f">
-      <label><span class="lab">Supplier</span></label>
-      <select id="supplier" onchange="onSupplier()"></select>
     </div>
     <div class="f">
       <label><span class="lab">Contract</span></label>
@@ -359,25 +396,6 @@ tr.hl td{color:var(--ink); font-weight:600}
   </section>
 
   <section class="card">
-    <h2>Supplier defaults</h2>
-    <p class="note">What gets preselected when you pick a supplier — contract type, feed-in payment and feed-in charge for the active regime. Every value remains adjustable with the sliders afterwards; this table is the starting point, not a lock. Rates: comparison-site peildatum 7 July 2026 (Zonneplan: own published figures, June 2026).</p>
-    <table id="supTable">
-      <thead><tr>
-        <th>Supplier</th>
-        <th>Default contract</th>
-        <th class="num">2026 feed-in</th>
-        <th class="num">2027 gross</th>
-        <th class="num">2027 charges</th>
-        <th class="num">2027 net</th>
-      </tr></thead>
-      <tbody></tbody>
-    </table>
-    <div class="callout">
-      <b>Zonneplan</b> is dynamic-only: no fixed feed-in rate and no terugleverkosten. Export earns the hourly market price plus their Zonnebonus (2 ct/kWh, then +10% on the total). The 2027 column shows their historical average of ~6 ct/kWh net for comparison — the simulator prices it hourly when selected.
-    </div>
-  </section>
-
-  <section class="card">
     <h2>Energy &amp; cost detail</h2>
     <table id="detail"><tbody></tbody></table>
   </section>
@@ -385,39 +403,48 @@ tr.hl td{color:var(--ink); font-weight:600}
 </main>
 </div>
 
-<p class="foot">
-Run locally: save as <code>index.html</code> and open it, or serve the folder with <code>python -m http.server 8000</code> and visit <code>localhost:8000</code>. No dependencies, no network calls — the only external request is the webfont, which degrades cleanly offline.
-Irradiance is a clear-sky model with Erbs diffuse split and monthly Dutch cloud factors, calibrated to 954 kWh/kWp for a south-facing 35° array at 52°N. Prices are per kWh excluding VAT. Supplier figures are July 2026 comparison-site values and should be checked against published tariff sheets before external use.
-</p>
+<footer class="foot">
+
+  <div class="foot-cta">
+    <div>
+      <b>Spotted an error, or have an idea?</b>
+      Corrections to the model or its assumptions are very welcome — as is anything you think would make this more useful.
+    </div>
+    <a class="cta" href="https://www.linkedin.com/in/zakaria-jaiathe/" target="_blank" rel="noopener noreferrer">Get in touch on LinkedIn →</a>
+  </div>
+
+  <div class="foot-grid">
+    <section>
+      <h4>Method &amp; data</h4>
+      <p>Irradiance is a clear-sky model with an Erbs diffuse split and monthly Dutch cloud factors, calibrated to 954 kWh/kWp for a south-facing 35° array at 52°N. The dynamic price curve is synthesised (duck-curve shaped), not real EPEX data. All prices are per kWh excluding VAT.</p>
+      <p>Every tariff input is a generic, illustrative figure you set yourself. Nothing here is drawn from, or intended to represent, the terms of any particular energy supplier — use your own contract's numbers.</p>
+    </section>
+    <section>
+      <h4>Disclaimer</h4>
+      <p>This is an educational model and it can contain mistakes — no guarantee is given as to the accuracy, completeness or currency of the figures or the model behind them. It is an illustration, not financial, tax or energy advice, and not a comparison of energy suppliers or their products — don't base a purchase or a contract decision on it alone.</p>
+      <p>A personal side project by <a href="https://www.linkedin.com/in/zakaria-jaiathe/" target="_blank" rel="noopener noreferrer">Zakaria Jaiathe</a>. It is mine alone, does not represent any organisation I work with or collaborate with, and is not affiliated with or endorsed by any energy supplier. Not intended for commercial reuse.</p>
+    </section>
+  </div>
+
+  <p class="foot-legal">© 2026 Zakaria Jaiathe · Provided “as is”, without warranty of any kind, express or implied. Use at your own risk.</p>
+
+</footer>
 
 <script>
 "use strict";
 /* ============================================================
-   SUPPLIER DATA — peildatum 7 July 2026 (Zonneplan: June 2026)
-   tlv26 = 2026 feed-in payment (1yr fixed)
-   g27 / n27 = 2027 gross and net-of-charges feed-in
-   contract = default contract type preselected on switch
-   dynBonus = ct/kWh added on market price (Zonneplan Zonnebonus)
-   Sorted alphabetically.
+   REGIME DEFAULTS
+   Illustrative starting points for the feed-in sliders, rounded to
+   the middle of the market range in each regime. Not tied to any
+   supplier or product — set the sliders to whatever your own
+   contract actually says.
+   tlv = feed-in payment (gross, ct/kWh)
+   tlk = feed-in charge / terugleverkosten (ct/kWh)
    ============================================================ */
-const SUPPLIERS = [
-  {n:"Budget Thuis",     tlv26:1.00,  g27:6.28,  n27:1.75, contract:"fixed"},
-  {n:"Coolblue Energie", tlv26:12.00, g27:7.00,  n27:0.50, contract:"fixed"},
-  {n:"DELTA Energie",    tlv26:16.50, g27:5.18,  n27:0.25, contract:"fixed"},
-  {n:"Eneco",            tlv26:15.10, g27:6.30,  n27:1.79, contract:"fixed"},
-  {n:"Energiedirect",    tlv26:15.00, g27:5.63,  n27:0.25, contract:"fixed"},
-  {n:"Energiek",         tlv26:6.00,  g27:6.00,  n27:0.56, contract:"fixed"},
-  {n:"ENGIE",            tlv26:11.85, g27:12.11, n27:0.73, contract:"fixed"},
-  {n:"Essent",           tlv26:15.00, g27:5.59,  n27:0.25, contract:"fixed"},
-  {n:"Greenchoice",      tlv26:15.00, g27:5.63,  n27:0.25, contract:"fixed"},
-  {n:"Oxxio",            tlv26:15.20, g27:6.28,  n27:1.78, contract:"fixed"},
-  {n:"Powerpeers",       tlv26:15.00, g27:6.00,  n27:0.24, contract:"fixed"},
-  {n:"Pure Energie",     tlv26:8.50,  g27:8.50,  n27:0.25, contract:"fixed"},
-  {n:"UnitedConsumers",  tlv26:11.99, g27:11.99, n27:0.50, contract:"fixed"},
-  {n:"Vandebron",        tlv26:16.00, g27:5.66,  n27:0.25, contract:"fixed"},
-  {n:"Vattenfall",       tlv26:12.40, g27:5.75,  n27:1.47, contract:"fixed"},
-  {n:"Zonneplan",        tlv26:6.00,  g27:6.00,  n27:6.00, contract:"dynamic", dynBonus:2.0},
-];
+const REGIME_DEFAULTS = {
+  2026: {tlv:12.00, tlk:0},     // saldering: netted first, surplus paid at the feed-in rate
+  2027: {tlv:6.00,  tlk:4.50},  // post-saldering: lower gross, charges applied
+};
 
 const MDAYS=[31,28,31,30,31,30,31,31,30,31,30,31];
 const MNAME=["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -628,12 +655,9 @@ function simulate(cfg,modeOverride){
   let importCost, exportRev, feedCost;
   if(cfg.contract==="dynamic"){
     let ic=0, er=0;
-    const bonus=cfg.dynBonus||0;
     for(let i=0;i<H;i++){
       ic+=imp[i]*(price[i]+cfg.taxes);
-      // export: market price minus small margin; with Zonnebonus, (market + flat bonus) * 1.10
-      const exRate = bonus>0 ? Math.max(0,(price[i]+bonus)*1.10) : Math.max(0,price[i]-1.5);
-      er+=exp[i]*exRate;
+      er+=exp[i]*Math.max(0,price[i]-1.5);   // export: hourly market price minus a small margin
     }
     importCost=ic/100; exportRev=er/100; feedCost=0;
   } else if(REGIME===2026){
@@ -671,7 +695,6 @@ function readCfg(){
     connKw:num("conn"),
     retail:num("retail"), kale:num("kale"), tlv:num("tlv"), tlk:num("tlk"),
     contract:$("contract").value,
-    dynBonus:(SUPPLIERS[+$("supplier").value].dynBonus||0),
   };
   cfg.taxes=Math.max(0,cfg.retail-cfg.kale);
   cfg.pv=pvProfile(cfg.kwp,cfg.tilt,cfg.az,cfg.inv,cfg.ew);
@@ -730,14 +753,12 @@ function setRegime(y){
   $("reg2026").setAttribute("aria-pressed",String(y===2026));
   $("reg2027").setAttribute("aria-pressed",String(y===2027));
   $("regimeFlag").textContent="regime · "+y;
-  onSupplier();
+  applyRegimeDefaults();
 }
-function onSupplier(){
-  const s=SUPPLIERS[+$("supplier").value];
-  // Preselect this supplier's defaults; every field stays adjustable afterwards.
-  $("contract").value=s.contract;
-  if(REGIME===2026){ $("tlv").value=s.tlv26; $("tlk").value=0; }
-  else { $("tlv").value=s.g27; $("tlk").value=Math.max(0,+(s.g27-s.n27).toFixed(2)); }
+function applyRegimeDefaults(){
+  // Reset the feed-in sliders to mid-market values for this regime; both stay adjustable afterwards.
+  const d=REGIME_DEFAULTS[REGIME];
+  $("tlv").value=d.tlv; $("tlk").value=d.tlk;
   run();
 }
 function setPersona(d){ $("office").value=d; run(); }
@@ -886,7 +907,7 @@ function drawTables(){
 
   // headline
   const dynActive=CFG.contract==="dynamic";
-  const dynAvg=CFG.dynBonus>0?6.0:4.0; // rough avg net export on dynamic
+  const dynAvg=4.0; // rough avg net export value on a dynamic contract
   const netTlv=dynActive?dynAvg:(REGIME===2026?CFG.tlv-CFG.tlk:Math.max(0,CFG.tlv-CFG.tlk));
   const spread=CFG.retail-netTlv;
   $("verdict").innerHTML=`
@@ -948,28 +969,10 @@ function drawTables(){
   });
 }
 
-function drawSuppliers(){
-  const active=+$("supplier").value;
-  const tb=$("supTable").querySelector("tbody"); tb.innerHTML="";
-  SUPPLIERS.forEach((s,i)=>{
-    const tr=el("tr",{}); if(i===active) tr.setAttribute("class","hl");
-    const dyn=s.contract==="dynamic";
-    tr.innerHTML=`<td>${s.n}${i===active?' ·':''}</td>
-      <td>${dyn?"Dynamic":"Fixed / variable"}</td>
-      <td class="num">${dyn?"market":s.tlv26.toFixed(2)+" ct"}</td>
-      <td class="num">${dyn?"market + bonus":s.g27.toFixed(2)+" ct"}</td>
-      <td class="num">${dyn?"none":(s.g27-s.n27).toFixed(2)+" ct"}</td>
-      <td class="num">${dyn?"~"+s.n27.toFixed(0)+" ct avg":s.n27.toFixed(2)+" ct"}</td>`;
-    tb.appendChild(tr);
-  });
-}
-
-function draw(){ drawRibbon(); drawMonthly(); drawTables(); drawSuppliers(); }
+function draw(){ drawRibbon(); drawMonthly(); drawTables(); }
 
 /* ---------- init ---------- */
 (function init(){
-  const eneco=SUPPLIERS.findIndex(s=>s.n==="Eneco");
-  $("supplier").innerHTML=SUPPLIERS.map((s,i)=>`<option value="${i}"${i===eneco?" selected":""}>${s.n}</option>`).join("");
   $("rmonth").innerHTML=MNAME.map((m,i)=>`<option value="${i}"${i===5?" selected":""}>${m}</option>`).join("");
   setRegime(2027);
 })();

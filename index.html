@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mismatch — NL solar &amp; EV charging economics, 2026 vs 2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#131A28; --panel:#1A2334; --panel-2:#212C41; --line:#2C3853; --line-hi:#3E4D6E;
+  --ink:#E8ECF5; --ink-2:#B4C0D8; --muted:#7F8DAC;
+  --solar:#F7B32B; --house:#8FA3C4; --ev:#8B6FF0; --batt:#45C98A;
+  --imp:#FF6B6B; --exp:#34A9C4;
+  --focus:#8B6FF0;
+  --r:3px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:"Space Grotesk","IBM Plex Sans",sans-serif;margin:0;font-weight:700;letter-spacing:-0.02em}
+
+/* ---------- shell ---------- */
+.masthead{
+  border-bottom:1px solid var(--line); padding:20px 28px;
+  display:flex; align-items:baseline; gap:18px; flex-wrap:wrap;
+}
+.masthead h1{font-size:22px}
+.masthead .sub{color:var(--muted); font-size:13px; max-width:62ch}
+.regime-flag{
+  margin-left:auto; font-family:"IBM Plex Mono",monospace; font-size:11px;
+  letter-spacing:0.08em; text-transform:uppercase; color:var(--muted);
+  border:1px solid var(--line); border-radius:var(--r); padding:5px 10px;
+}
+
+.shell{display:grid; grid-template-columns:340px minmax(0,1fr); align-items:start}
+@media(max-width:1000px){ .shell{grid-template-columns:1fr} }
+
+/* ---------- control rail ---------- */
+.rail{
+  border-right:1px solid var(--line); padding:8px 22px 60px;
+  position:sticky; top:0; max-height:100vh; overflow-y:auto;
+}
+@media(max-width:1000px){ .rail{position:static; max-height:none; border-right:none; border-bottom:1px solid var(--line)} }
+.rail::-webkit-scrollbar{width:8px}
+.rail::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px}
+
+.grp{border-top:1px solid var(--line); padding:16px 0 6px}
+.grp:first-child{border-top:none}
+.grp > h3{
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:600;
+  letter-spacing:0.14em; text-transform:uppercase; color:var(--muted);
+  margin-bottom:12px; display:flex; align-items:center; gap:8px;
+}
+.grp > h3::after{content:""; flex:1; height:1px; background:var(--line)}
+
+.f{margin-bottom:13px}
+.f label{display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:5px}
+.f .lab{font-size:12.5px; color:var(--ink-2)}
+.f .val{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink); font-variant-numeric:tabular-nums}
+
+input[type=range]{
+  -webkit-appearance:none; appearance:none; width:100%; height:18px;
+  background:transparent; cursor:pointer; margin:0;
+}
+input[type=range]::-webkit-slider-runnable-track{height:2px; background:var(--line-hi); border-radius:2px}
+input[type=range]::-moz-range-track{height:2px; background:var(--line-hi); border-radius:2px}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:13px; height:13px; border-radius:50%;
+  background:var(--ink); margin-top:-5.5px; border:none; transition:transform .12s;
+}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--ink);border:none}
+input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.25)}
+input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px rgba(139,111,240,.55)}
+
+select, input[type=number]{
+  width:100%; background:var(--panel-2); color:var(--ink);
+  border:1px solid var(--line-hi); border-radius:var(--r); padding:7px 9px;
+  font-family:"IBM Plex Sans",sans-serif; font-size:12.5px;
+}
+select:focus-visible, input:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+
+.seg{display:flex; border:1px solid var(--line-hi); border-radius:var(--r); overflow:hidden}
+.seg button{
+  flex:1; background:transparent; border:none; color:var(--muted);
+  font-family:"IBM Plex Sans",sans-serif; font-size:11.5px; padding:7px 4px;
+  cursor:pointer; border-right:1px solid var(--line-hi); transition:.12s;
+}
+.seg button:last-child{border-right:none}
+.seg button:hover{color:var(--ink); background:var(--panel-2)}
+.seg button[aria-pressed="true"]{background:var(--focus); color:#fff; font-weight:600}
+.seg button:focus-visible{outline:2px solid var(--focus); outline-offset:-2px}
+
+.chk{display:flex; align-items:center; gap:9px; cursor:pointer; padding:3px 0; font-size:12.5px; color:var(--ink-2)}
+.chk input{accent-color:var(--focus); width:15px; height:15px; cursor:pointer}
+
+/* ---------- results ---------- */
+.main{padding:22px 28px 80px; min-width:0}
+.card{
+  background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--r); padding:18px 20px; margin-bottom:18px;
+}
+.card > h2{
+  font-size:14px; margin-bottom:3px; letter-spacing:-0.01em;
+}
+.card .note{color:var(--muted); font-size:12px; margin-bottom:16px; max-width:78ch}
+
+/* headline verdict */
+.verdict{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:1px; background:var(--line); border:1px solid var(--line); border-radius:var(--r);
+  overflow:hidden; margin-bottom:18px;
+}
+.vc{background:var(--panel); padding:15px 17px}
+.vc .k{
+  font-family:"IBM Plex Mono",monospace; font-size:9.5px; letter-spacing:0.13em;
+  text-transform:uppercase; color:var(--muted); margin-bottom:7px;
+}
+.vc .v{font-family:"Space Grotesk",sans-serif; font-size:25px; font-weight:700; letter-spacing:-0.03em; line-height:1.05}
+.vc .u{font-size:12px; color:var(--muted); font-weight:500; margin-left:2px}
+.vc .d{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--muted); margin-top:5px}
+.pos{color:var(--batt)} .neg{color:var(--imp)} .warm{color:var(--solar)}
+
+/* ribbon */
+.ribbon-ctl{display:flex; gap:8px; align-items:center; margin-bottom:14px; flex-wrap:wrap}
+.ribbon-ctl select{width:auto; min-width:120px}
+.rlabel{
+  font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:0.1em;
+  text-transform:uppercase; color:var(--muted);
+}
+svg{display:block; width:100%; height:auto; overflow:visible}
+.axis{stroke:var(--line); stroke-width:1}
+.gtick{fill:var(--muted); font-family:"IBM Plex Mono",monospace; font-size:9px}
+.lane-lab{fill:var(--ink-2); font-family:"IBM Plex Mono",monospace; font-size:9.5px; letter-spacing:0.06em}
+
+.legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:14px}
+.lg{display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-2)}
+.sw{width:11px; height:11px; border-radius:2px; flex:none}
+
+table{width:100%; border-collapse:collapse; font-size:12.5px}
+th{
+  text-align:left; font-family:"IBM Plex Mono",monospace; font-size:9.5px;
+  letter-spacing:0.11em; text-transform:uppercase; color:var(--muted);
+  font-weight:500; padding:0 10px 8px 0; border-bottom:1px solid var(--line);
+}
+th.num, td.num{text-align:right; padding-right:0}
+td{padding:8px 10px 8px 0; border-bottom:1px solid var(--line); color:var(--ink-2)}
+td.num{font-family:"IBM Plex Mono",monospace; color:var(--ink); font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+tr.hl td{color:var(--ink); font-weight:600}
+
+.callout{
+  border-left:2px solid var(--solar); padding:11px 0 11px 14px;
+  color:var(--ink-2); font-size:12.5px; margin-top:16px; max-width:80ch;
+}
+.callout b{color:var(--ink); font-weight:600}
+.foot{color:var(--muted); font-size:11.5px; max-width:80ch; padding:0 28px 40px}
+.foot code{background:var(--panel-2); padding:1px 5px; border-radius:2px; font-size:11px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <h1>Mismatch</h1>
+  <div class="sub">Dutch home solar &amp; EV charging economics. The car is away when the sun is up — this model puts a number on that.</div>
+  <div class="regime-flag" id="regimeFlag">regime · 2027</div>
+</div>
+
+<div class="shell">
+<!-- ============ CONTROL RAIL ============ -->
+<aside class="rail">
+
+  <div class="grp">
+    <h3>Tariff regime</h3>
+    <div class="f">
+      <div class="seg" role="group" aria-label="Tariff regime">
+        <button id="reg2026" onclick="setRegime(2026)" aria-pressed="false">2026 · saldering</button>
+        <button id="reg2027" onclick="setRegime(2027)" aria-pressed="true">2027 · no saldering</button>
+      </div>
+    </div>
+    <div class="f">
+      <label><span class="lab">Supplier</span></label>
+      <select id="supplier" onchange="onSupplier()"></select>
+    </div>
+    <div class="f">
+      <label><span class="lab">Contract</span></label>
+      <select id="contract" onchange="run()">
+        <option value="fixed">Fixed / variable</option>
+        <option value="dynamic">Dynamic (hourly market)</option>
+      </select>
+    </div>
+    <div class="f"><label><span class="lab">Retail import price</span><span class="val" id="v_retail"></span></label>
+      <input type="range" id="retail" min="15" max="45" step="0.5" value="29" oninput="run()"></div>
+    <div class="f"><label><span class="lab">Bare supply tariff <span title="kale leveringstarief — the 2027 floor is 50% of this">ⓘ</span></span><span class="val" id="v_kale"></span></label>
+      <input type="range" id="kale" min="5" max="25" step="0.5" value="12" oninput="run()"></div>
+    <div class="f"><label><span class="lab">Feed-in payment (gross)</span><span class="val" id="v_tlv"></span></label>
+      <input type="range" id="tlv" min="0" max="20" step="0.05" value="6.3" oninput="run()"></div>
+    <div class="f"><label><span class="lab">Feed-in charge (terugleverkosten)</span><span class="val" id="v_tlk"></span></label>
+      <input type="range" id="tlk" min="0" max="20" step="0.05" value="4.51" oninput="run()"></div>
+  </div>
+
+  <div class="grp">
+    <h3>Solar array</h3>
+    <div class="f"><label><span class="lab">Installed capacity</span><span class="val" id="v_kwp"></span></label>
+      <input type="range" id="kwp" min="0" max="15" step="0.25" value="4" oninput="run()"></div>
+    <div class="f"><label><span class="lab">Orientation</span><span class="val" id="v_az"></span></label>
+      <input type="range" id="az" min="-90" max="90" step="5" value="0" oninput="run()"></div>
+    <div class="f"><label><span class="lab">Tilt</span><span class="val" id="v_tilt"></span></label>
+      <input type="range" id="tilt" min="0" max="60" step="1" value="35" oninput="run()"></div>
+    <div class="f"><label><span class="lab">Inverter AC limit</span><span class="val" id="v_inv"></span></label>
+      <input type="range" id="inv" min="1" max="15" step="0.25" value="4" oninput="run()"></div>
+    <label class="chk"><input type="checkbox" id="ew" onchange="run()"> East–west split array</label>
+  </div>
+
+  <div class="grp">
+    <h3>Household</h3>
+    <div class="f"><label><span class="lab">Base consumption</span><span class="val" id="v_base"></span></label>
+      <input type="range" id="base" min="1000" max="6000" step="100" value="2900" oninput="run()"></div>
+    <label class="chk"><input type="checkbox" id="hp" onchange="run()"> Heat pump</label>
+    <div class="f" id="hpBox" style="display:none;margin-top:10px"><label><span class="lab">Heat pump demand</span><span class="val" id="v_hpk"></span></label>
+      <input type="range" id="hpk" min="1000" max="6000" step="100" value="2800" oninput="run()"></div>
+  </div>
+
+  <div class="grp">
+    <h3>Driver</h3>
+    <div class="f">
+      <label><span class="lab">Persona</span></label>
+      <div class="seg" role="group" aria-label="Driver persona">
+        <button onclick="setPersona(5)" data-p="5">Office</button>
+        <button onclick="setPersona(3)" data-p="3">Hybrid</button>
+        <button onclick="setPersona(0)" data-p="0">WFH</button>
+      </div>
+    </div>
+    <div class="f"><label><span class="lab">Days in office / week</span><span class="val" id="v_office"></span></label>
+      <input type="range" id="office" min="0" max="5" step="1" value="3" oninput="run()"></div>
+    <div class="f"><label><span class="lab">Commute, one way</span><span class="val" id="v_comm"></span></label>
+      <input type="range" id="comm" min="0" max="80" step="1" value="28" oninput="run()"></div>
+    <div class="f"><label><span class="lab">Weekend driving / week</span><span class="val" id="v_wknd"></span></label>
+      <input type="range" id="wknd" min="0" max="300" step="5" value="70" oninput="run()"></div>
+    <div class="f"><label><span class="lab">Leaves home at</span><span class="val" id="v_dep"></span></label>
+      <input type="range" id="dep" min="5" max="11" step="1" value="8" oninput="run()"></div>
+    <div class="f"><label><span class="lab">Returns home at</span><span class="val" id="v_arr"></span></label>
+      <input type="range" id="arr" min="13" max="23" step="1" value="18" oninput="run()"></div>
+    <label class="chk"><input type="checkbox" id="wpc" onchange="run()"> Charges at workplace instead</label>
+    <div class="f" id="wpcBox" style="display:none;margin-top:10px"><label><span class="lab">Workplace price</span><span class="val" id="v_wpcp"></span></label>
+      <input type="range" id="wpcp" min="0" max="60" step="1" value="0" oninput="run()"></div>
+  </div>
+
+  <div class="grp">
+    <h3>Vehicle &amp; charger</h3>
+    <div class="f"><label><span class="lab">Battery capacity</span><span class="val" id="v_cap"></span></label>
+      <input type="range" id="cap" min="20" max="120" step="1" value="60" oninput="run()"></div>
+    <div class="f"><label><span class="lab">Efficiency</span><span class="val" id="v_eff"></span></label>
+      <input type="range" id="eff" min="12" max="30" step="0.5" value="19" oninput="run()"></div>
+    <div class="f"><label><span class="lab">Charger power</span><span class="val" id="v_ch"></span></label>
+      <input type="range" id="ch" min="3.7" max="22" step="0.1" value="11" oninput="run()"></div>
+    <div class="f"><label><span class="lab">Minimum charge rate</span><span class="val" id="v_min"></span></label>
+      <input type="range" id="minch" min="0" max="4.5" step="0.1" value="1.4" oninput="run()"></div>
+    <div class="f"><label><span class="lab">Min charge at departure</span><span class="val" id="v_soc"></span></label>
+      <input type="range" id="soc" min="20" max="100" step="5" value="70" oninput="run()"></div>
+    <div class="f">
+      <label><span class="lab">Charging control</span></label>
+      <select id="mode" onchange="run()">
+        <option value="uncontrolled">Uncontrolled — charge on arrival</option>
+        <option value="night">Night / off-peak window</option>
+        <option value="solar">Solar surplus only</option>
+        <option value="hybrid" selected>Solar surplus + cheap-hour top-up</option>
+        <option value="price">Price-optimised (dynamic)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="grp">
+    <h3>Home battery</h3>
+    <label class="chk"><input type="checkbox" id="bat" onchange="run()"> Include home battery</label>
+    <div id="batBox" style="display:none;margin-top:11px">
+      <div class="f"><label><span class="lab">Usable capacity</span><span class="val" id="v_bcap"></span></label>
+        <input type="range" id="bcap" min="2" max="30" step="0.5" value="10" oninput="run()"></div>
+      <div class="f"><label><span class="lab">Power</span><span class="val" id="v_bp"></span></label>
+        <input type="range" id="bp" min="1" max="15" step="0.5" value="5" oninput="run()"></div>
+      <div class="f"><label><span class="lab">Round-trip efficiency</span><span class="val" id="v_bre"></span></label>
+        <input type="range" id="bre" min="70" max="98" step="1" value="88" oninput="run()"></div>
+      <div class="f"><label><span class="lab">Installed cost</span><span class="val" id="v_bcost"></span></label>
+        <input type="range" id="bcost" min="0" max="12000" step="250" value="5500" oninput="run()"></div>
+    </div>
+  </div>
+
+  <div class="grp">
+    <h3>Grid connection</h3>
+    <div class="f"><label><span class="lab">Connection limit</span><span class="val" id="v_conn"></span></label>
+      <input type="range" id="conn" min="5" max="35" step="0.5" value="17" oninput="run()"></div>
+  </div>
+</aside>
+
+<!-- ============ RESULTS ============ -->
+<main class="main">
+
+  <div class="verdict" id="verdict"></div>
+
+  <!-- SIGNATURE ELEMENT -->
+  <section class="card">
+    <h2>The mismatch</h2>
+    <p class="note">An average day, hour by hour. The top lane is what the roof makes; the bottom lane is when the car is actually plugged in at home. Where they fail to overlap is where the money leaks out at the feed-in rate.</p>
+    <div class="ribbon-ctl">
+      <span class="rlabel">Month</span>
+      <select id="rmonth" onchange="draw()"></select>
+      <span class="rlabel">Day type</span>
+      <select id="rday" onchange="draw()">
+        <option value="office">Office day</option>
+        <option value="wfh">Work-from-home day</option>
+        <option value="weekend">Weekend</option>
+      </select>
+    </div>
+    <svg id="ribbon" viewBox="0 0 900 360" role="img" aria-label="Hourly profile of solar generation, household load, EV charging and car presence"></svg>
+    <div class="legend">
+      <span class="lg"><span class="sw" style="background:var(--solar)"></span>Solar generation</span>
+      <span class="lg"><span class="sw" style="background:var(--house)"></span>Household load</span>
+      <span class="lg"><span class="sw" style="background:var(--ev)"></span>EV charging</span>
+      <span class="lg"><span class="sw" style="background:var(--batt)"></span>Battery</span>
+      <span class="lg"><span class="sw" style="background:var(--exp)"></span>Exported</span>
+      <span class="lg"><span class="sw" style="background:var(--imp)"></span>Imported</span>
+    </div>
+    <div class="callout" id="mismatchNote"></div>
+  </section>
+
+  <section class="card">
+    <h2>Where the solar goes</h2>
+    <p class="note">Annual generation split by destination. Every kWh in the export band is worth the net feed-in rate; every kWh in the other bands is worth the full retail price avoided.</p>
+    <svg id="monthly" viewBox="0 0 900 260" role="img" aria-label="Monthly breakdown of solar energy by destination"></svg>
+    <div class="legend">
+      <span class="lg"><span class="sw" style="background:var(--house)"></span>To household</span>
+      <span class="lg"><span class="sw" style="background:var(--ev)"></span>To car</span>
+      <span class="lg"><span class="sw" style="background:var(--batt)"></span>To battery</span>
+      <span class="lg"><span class="sw" style="background:var(--exp)"></span>Exported</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Control strategies compared</h2>
+    <p class="note">Same house, same car, same tariff — only the charging logic changes. Costs are annual variable energy costs; the delta is against uncontrolled charging.</p>
+    <table id="modeTable">
+      <thead><tr>
+        <th>Strategy</th>
+        <th class="num">Self-consumed</th>
+        <th class="num">Exported</th>
+        <th class="num">Annual cost</th>
+        <th class="num">vs. uncontrolled</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>Supplier defaults</h2>
+    <p class="note">What gets preselected when you pick a supplier — contract type, feed-in payment and feed-in charge for the active regime. Every value remains adjustable with the sliders afterwards; this table is the starting point, not a lock. Rates: comparison-site peildatum 7 July 2026 (Zonneplan: own published figures, June 2026).</p>
+    <table id="supTable">
+      <thead><tr>
+        <th>Supplier</th>
+        <th>Default contract</th>
+        <th class="num">2026 feed-in</th>
+        <th class="num">2027 gross</th>
+        <th class="num">2027 charges</th>
+        <th class="num">2027 net</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="callout">
+      <b>Zonneplan</b> is dynamic-only: no fixed feed-in rate and no terugleverkosten. Export earns the hourly market price plus their Zonnebonus (2 ct/kWh, then +10% on the total). The 2027 column shows their historical average of ~6 ct/kWh net for comparison — the simulator prices it hourly when selected.
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Energy &amp; cost detail</h2>
+    <table id="detail"><tbody></tbody></table>
+  </section>
+
+</main>
+</div>
+
+<p class="foot">
+Run locally: save as <code>index.html</code> and open it, or serve the folder with <code>python -m http.server 8000</code> and visit <code>localhost:8000</code>. No dependencies, no network calls — the only external request is the webfont, which degrades cleanly offline.
+Irradiance is a clear-sky model with Erbs diffuse split and monthly Dutch cloud factors, calibrated to 954 kWh/kWp for a south-facing 35° array at 52°N. Prices are per kWh excluding VAT. Supplier figures are July 2026 comparison-site values and should be checked against published tariff sheets before external use.
+</p>
+
+<script>
+"use strict";
+/* ============================================================
+   SUPPLIER DATA — peildatum 7 July 2026 (Zonneplan: June 2026)
+   tlv26 = 2026 feed-in payment (1yr fixed)
+   g27 / n27 = 2027 gross and net-of-charges feed-in
+   contract = default contract type preselected on switch
+   dynBonus = ct/kWh added on market price (Zonneplan Zonnebonus)
+   Sorted alphabetically.
+   ============================================================ */
+const SUPPLIERS = [
+  {n:"Budget Thuis",     tlv26:1.00,  g27:6.28,  n27:1.75, contract:"fixed"},
+  {n:"Coolblue Energie", tlv26:12.00, g27:7.00,  n27:0.50, contract:"fixed"},
+  {n:"DELTA Energie",    tlv26:16.50, g27:5.18,  n27:0.25, contract:"fixed"},
+  {n:"Eneco",            tlv26:15.10, g27:6.30,  n27:1.79, contract:"fixed"},
+  {n:"Energiedirect",    tlv26:15.00, g27:5.63,  n27:0.25, contract:"fixed"},
+  {n:"Energiek",         tlv26:6.00,  g27:6.00,  n27:0.56, contract:"fixed"},
+  {n:"ENGIE",            tlv26:11.85, g27:12.11, n27:0.73, contract:"fixed"},
+  {n:"Essent",           tlv26:15.00, g27:5.59,  n27:0.25, contract:"fixed"},
+  {n:"Greenchoice",      tlv26:15.00, g27:5.63,  n27:0.25, contract:"fixed"},
+  {n:"Oxxio",            tlv26:15.20, g27:6.28,  n27:1.78, contract:"fixed"},
+  {n:"Powerpeers",       tlv26:15.00, g27:6.00,  n27:0.24, contract:"fixed"},
+  {n:"Pure Energie",     tlv26:8.50,  g27:8.50,  n27:0.25, contract:"fixed"},
+  {n:"UnitedConsumers",  tlv26:11.99, g27:11.99, n27:0.50, contract:"fixed"},
+  {n:"Vandebron",        tlv26:16.00, g27:5.66,  n27:0.25, contract:"fixed"},
+  {n:"Vattenfall",       tlv26:12.40, g27:5.75,  n27:1.47, contract:"fixed"},
+  {n:"Zonneplan",        tlv26:6.00,  g27:6.00,  n27:6.00, contract:"dynamic", dynBonus:2.0},
+];
+
+const MDAYS=[31,28,31,30,31,30,31,31,30,31,30,31];
+const MNAME=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MSHORT=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const CLOUD=[0.34,0.38,0.44,0.51,0.54,0.54,0.53,0.52,0.47,0.40,0.33,0.30];
+const CALIB=1.50, LAT=52.0, RAD=Math.PI/180;
+const H=8760;
+
+let REGIME=2027;
+const $=id=>document.getElementById(id);
+const num=id=>parseFloat($(id).value);
+const monthOf=n=>{let d=n,m=0;while(d>=MDAYS[m]){d-=MDAYS[m];m++;}return m;};
+const dayOfMonth=n=>{let d=n,m=0;while(d>=MDAYS[m]){d-=MDAYS[m];m++;}return d;};
+
+/* ---------- PV ---------- */
+function pvProfile(kWp,tiltDeg,azDeg,invLimit,ew){
+  const out=new Float64Array(H);
+  const arrays = ew ? [[tiltDeg,-90,kWp/2],[tiltDeg,90,kWp/2]] : [[tiltDeg,azDeg,kWp]];
+  const phi=LAT*RAD;
+  for(const [t,a,cap] of arrays){
+    const beta=t*RAD, gamma=a*RAD;
+    for(let n=0;n<365;n++){
+      const decl=23.45*Math.sin(360*(284+n)/365*RAD)*RAD;
+      const cf=CLOUD[monthOf(n)];
+      const I0=1367*(1+0.033*Math.cos(360*n/365*RAD));
+      for(let h=0;h<24;h++){
+        const omega=15*(h+0.5-12)*RAD;
+        const cosZ=Math.sin(decl)*Math.sin(phi)+Math.cos(decl)*Math.cos(phi)*Math.cos(omega);
+        if(cosZ<=0.02) continue;
+        const AM=1/cosZ;
+        const dniC=I0*Math.pow(0.7,Math.pow(AM,0.678));
+        const ghi=(dniC*cosZ+0.10*dniC*cosZ)*cf*CALIB;
+        const kt=Math.min(0.8,ghi/(I0*cosZ));
+        let df;
+        if(kt<=0.22) df=1-0.09*kt;
+        else if(kt<=0.80) df=0.9511-0.1604*kt+4.388*kt*kt-16.638*kt*kt*kt+12.336*kt*kt*kt*kt;
+        else df=0.165;
+        const dhi=ghi*df, dni=(ghi-dhi)/cosZ;
+        const cosI=Math.sin(decl)*Math.sin(phi)*Math.cos(beta)
+                  -Math.sin(decl)*Math.cos(phi)*Math.sin(beta)*Math.cos(gamma)
+                  +Math.cos(decl)*Math.cos(phi)*Math.cos(beta)*Math.cos(omega)
+                  +Math.cos(decl)*Math.sin(phi)*Math.sin(beta)*Math.cos(gamma)*Math.cos(omega)
+                  +Math.cos(decl)*Math.sin(beta)*Math.sin(gamma)*Math.sin(omega);
+        const poa=dni*Math.max(0,cosI)+dhi*(1+Math.cos(beta))/2+ghi*0.2*(1-Math.cos(beta))/2;
+        out[n*24+h]+=cap*poa/1000*0.86;
+      }
+    }
+  }
+  for(let i=0;i<H;i++) out[i]=Math.min(out[i],invLimit);
+  return out;
+}
+
+/* ---------- household load ---------- */
+const SHAPE=[.55,.5,.47,.46,.48,.6,.85,1.05,1.0,.9,.85,.85,.9,.85,.85,.95,1.25,1.7,1.9,1.75,1.5,1.25,.95,.7];
+function loadProfile(annual,hpOn,hpAnnual){
+  const out=new Float64Array(H);
+  let raw=0;
+  const seas=n=>1+0.22*Math.cos(2*Math.PI*(n-15)/365);
+  for(let n=0;n<365;n++) for(let h=0;h<24;h++) raw+=SHAPE[h]*seas(n);
+  const k=annual/raw;
+  for(let n=0;n<365;n++) for(let h=0;h<24;h++) out[n*24+h]=SHAPE[h]*seas(n)*k;
+  if(hpOn){
+    const HPS=[.7,.7,.7,.75,.9,1.3,1.6,1.5,1.1,.85,.75,.7,.7,.7,.75,.9,1.2,1.5,1.5,1.3,1.1,.95,.85,.75];
+    let hraw=0;
+    const hd=n=>Math.max(0,1-Math.cos(2*Math.PI*(n-15)/365)*-1)*0+Math.max(0,(16-(9.5+8.5*Math.cos(2*Math.PI*(n-200)/365)))/16);
+    for(let n=0;n<365;n++) for(let h=0;h<24;h++) hraw+=HPS[h]*hd(n);
+    const hk=hpAnnual/hraw;
+    for(let n=0;n<365;n++) for(let h=0;h<24;h++) out[n*24+h]+=HPS[h]*hd(n)*hk;
+  }
+  return out;
+}
+
+/* ---------- day-ahead style price ---------- */
+function priceProfile(retail,kale,pv){
+  const p=new Float64Array(H);
+  const SH=[.72,.66,.62,.61,.65,.8,1.05,1.25,1.1,.9,.72,.6,.55,.58,.7,.9,1.15,1.45,1.5,1.35,1.2,1.05,.92,.8];
+  for(let n=0;n<365;n++){
+    const seas=1+0.16*Math.cos(2*Math.PI*(n-15)/365);
+    for(let h=0;h<24;h++){
+      const i=n*24+h;
+      const solarDepress=1-0.55*Math.min(1,pv[i]/Math.max(0.5,1));
+      p[i]=kale*SH[h]*seas*(0.45+0.55*solarDepress);
+    }
+  }
+  return p;
+}
+
+/* ---------- EV demand & presence ---------- */
+function evSchedule(cfg){
+  const home=new Uint8Array(H);
+  const need=new Float64Array(365);
+  const dayType=new Array(365);
+  let weekdayIdx=0;
+  for(let n=0;n<365;n++){
+    const dow=(n+4)%7;            // 2027-01-01 falls on a Friday; 0 = Monday
+    const weekend=(dow>=5);
+    let t;
+    if(weekend){ t="weekend"; }
+    else { t=((weekdayIdx++)%5)<cfg.officeDays ? "office" : "wfh"; }
+    dayType[n]=t;
+    let km=0;
+    if(t==="office"){ km=cfg.commute*2; for(let h=0;h<24;h++) home[n*24+h]=(h<cfg.dep||h>=cfg.arr)?1:0; }
+    else if(t==="wfh"){ km=cfg.commute*0.35; for(let h=0;h<24;h++) home[n*24+h]=(h>=17&&h<19)?0:1; }
+    else { km=cfg.weekendKm/2; for(let h=0;h<24;h++) home[n*24+h]=(h>=11&&h<16)?0:1; }
+    need[n]=km*cfg.effKwh/100;
+  }
+  return {home,need,dayType};
+}
+
+/* ---------- main dispatch ---------- */
+function simulate(cfg,modeOverride){
+  const mode=modeOverride||cfg.mode;
+  const pv=cfg.pv, load=cfg.load, price=cfg.price;
+  const {home,need,dayType}=cfg.sched;
+  const ev=new Float64Array(H), imp=new Float64Array(H), exp=new Float64Array(H);
+  const bc=new Float64Array(H), bd=new Float64Array(H), toHouse=new Float64Array(H), toEv=new Float64Array(H), toBat=new Float64Array(H);
+  let soc=cfg.capacity*0.7, bsoc=0, unmet=0, workplaceKwh=0;
+  const bEff=Math.sqrt(cfg.bre);
+
+  // sessions: contiguous home blocks; charge planned per block
+  let h0=0;
+  while(h0<H){
+    if(!home[h0]){ h0++; continue; }
+    let h1=h0; while(h1<H && home[h1]) h1++;
+    const day=Math.floor(h1/24);
+    // energy consumed by trips departing after this block
+    const req=need[Math.min(364,day)];
+    if(cfg.workplace){
+      // car charges at work; only the trip energy is billed there
+      workplaceKwh+=req; soc=cfg.capacity*0.8; h0=h1; continue;
+    }
+    const target=Math.min(cfg.capacity, Math.max(cfg.capacity*cfg.minSoc, soc+req));
+    let deficit=Math.max(0, target-soc);
+
+    // hour ranking for price-based fill
+    const hrs=[]; for(let i=h0;i<h1;i++) hrs.push(i);
+    const byPrice=[...hrs].sort((a,b)=>price[a]-price[b]);
+
+    if(mode==="uncontrolled"){
+      for(const i of hrs){ if(deficit<=0)break;
+        const e=Math.min(cfg.chargerKw,deficit); ev[i]=e; deficit-=e; }
+    } else if(mode==="night"){
+      const night=hrs.filter(i=>{const hh=i%24; return hh>=23||hh<7;});
+      const pool=night.length?night:hrs;
+      for(const i of pool){ if(deficit<=0)break;
+        const e=Math.min(cfg.chargerKw,deficit); ev[i]=e; deficit-=e; }
+      for(const i of hrs){ if(deficit<=0)break; if(ev[i])continue;
+        const e=Math.min(cfg.chargerKw,deficit); ev[i]=e; deficit-=e; }
+    } else if(mode==="price"){
+      for(const i of byPrice){ if(deficit<=0)break;
+        const e=Math.min(cfg.chargerKw,deficit); ev[i]=e; deficit-=e; }
+    } else {
+      // solar / hybrid: soak surplus first
+      for(const i of hrs){
+        if(deficit<=0)break;
+        const surplus=Math.max(0,pv[i]-load[i]);
+        if(surplus<cfg.minCharge) continue;
+        const e=Math.min(cfg.chargerKw,surplus,deficit);
+        ev[i]=e; deficit-=e;
+      }
+      if(mode==="hybrid"||mode==="solar"){
+        const mustHave=Math.max(0,cfg.capacity*cfg.minSoc-(soc+hrs.reduce((s,i)=>s+ev[i],0)));
+        let fill=(mode==="hybrid")?deficit:mustHave;
+        for(const i of byPrice){ if(fill<=0)break;
+          const room=cfg.chargerKw-ev[i]; if(room<=0.05)continue;
+          const e=Math.min(room,fill); ev[i]+=e; fill-=e; deficit-=e; }
+      }
+    }
+    let charged=0; for(const i of hrs) charged+=ev[i];
+    soc=Math.min(cfg.capacity,soc+charged);
+    if(soc<req){ unmet+=req-soc; soc=req; }
+    soc-=req;
+    h0=h1;
+  }
+
+  // hourly balance with battery + grid
+  for(let i=0;i<H;i++){
+    const gen=pv[i]; let dem=load[i]+ev[i];
+    const direct=Math.min(gen,dem);
+    toHouse[i]=Math.min(gen,load[i]);
+    toEv[i]=Math.max(0,direct-toHouse[i]);
+    let surplus=gen-direct, deficit=dem-direct;
+    if(cfg.battery){
+      if(surplus>0 && bsoc<cfg.bcap){
+        const e=Math.min(surplus,cfg.bpow,(cfg.bcap-bsoc)/bEff);
+        bc[i]=e; toBat[i]=e; bsoc+=e*bEff; surplus-=e;
+      }
+      if(deficit>0 && bsoc>0){
+        const e=Math.min(deficit,cfg.bpow,bsoc*bEff);
+        bd[i]=e; bsoc-=e/bEff; deficit-=e;
+      }
+    }
+    exp[i]=Math.min(surplus,cfg.connKw);
+    imp[i]=deficit;
+  }
+
+  const sum=a=>{let s=0;for(let i=0;i<H;i++)s+=a[i];return s;};
+  const totals={
+    pv:sum(pv), load:sum(load), ev:sum(ev), imp:sum(imp), exp:sum(exp),
+    toHouse:sum(toHouse), toEv:sum(toEv), toBat:sum(toBat),
+    bd:sum(bd), unmet, workplaceKwh
+  };
+  totals.selfCons=totals.toHouse+totals.toEv+totals.toBat;
+  totals.peak=Math.max(...imp);
+
+  /* ---- settlement ---- */
+  const R=cfg.retail, TLV=cfg.tlv, TLK=cfg.tlk;
+  let importCost, exportRev, feedCost;
+  if(cfg.contract==="dynamic"){
+    let ic=0, er=0;
+    const bonus=cfg.dynBonus||0;
+    for(let i=0;i<H;i++){
+      ic+=imp[i]*(price[i]+cfg.taxes);
+      // export: market price minus small margin; with Zonnebonus, (market + flat bonus) * 1.10
+      const exRate = bonus>0 ? Math.max(0,(price[i]+bonus)*1.10) : Math.max(0,price[i]-1.5);
+      er+=exp[i]*exRate;
+    }
+    importCost=ic/100; exportRev=er/100; feedCost=0;
+  } else if(REGIME===2026){
+    const netted=Math.min(totals.imp,totals.exp);
+    importCost=(totals.imp-netted)*R/100;
+    exportRev=Math.max(0,totals.exp-netted)*TLV/100;
+    feedCost=totals.exp*TLK/100;
+  } else {
+    importCost=totals.imp*R/100;
+    const net=Math.max(0,TLV-TLK);          // 2027 floor: net feed-in cannot be negative
+    exportRev=totals.exp*net/100;
+    feedCost=0;
+  }
+  const wpCost=totals.workplaceKwh*cfg.wpcPrice/100;
+  totals.cost=importCost-exportRev+feedCost+wpCost;
+  totals.importCost=importCost; totals.exportRev=exportRev; totals.feedCost=feedCost; totals.wpCost=wpCost;
+  return {totals,pv,load,ev,imp,exp,bc,bd,toHouse,toEv,toBat,home,dayType,price};
+}
+
+/* ============================================================
+   ORCHESTRATION
+   ============================================================ */
+let S=null, CFG=null, MODES=null;
+
+function readCfg(){
+  const off=num("office");
+  const cfg={
+    kwp:num("kwp"), az:num("az"), tilt:num("tilt"), inv:num("inv"), ew:$("ew").checked,
+    baseKwh:num("base"), hp:$("hp").checked, hpKwh:num("hpk"),
+    officeDays:off, commute:num("comm"), weekendKm:num("wknd"),
+    dep:num("dep"), arr:num("arr"), workplace:$("wpc").checked, wpcPrice:num("wpcp"),
+    capacity:num("cap"), effKwh:num("eff"), chargerKw:num("ch"), minCharge:num("minch"),
+    minSoc:num("soc")/100, mode:$("mode").value,
+    battery:$("bat").checked, bcap:num("bcap"), bpow:num("bp"), bre:num("bre")/100, bcost:num("bcost"),
+    connKw:num("conn"),
+    retail:num("retail"), kale:num("kale"), tlv:num("tlv"), tlk:num("tlk"),
+    contract:$("contract").value,
+    dynBonus:(SUPPLIERS[+$("supplier").value].dynBonus||0),
+  };
+  cfg.taxes=Math.max(0,cfg.retail-cfg.kale);
+  cfg.pv=pvProfile(cfg.kwp,cfg.tilt,cfg.az,cfg.inv,cfg.ew);
+  cfg.load=loadProfile(cfg.baseKwh,cfg.hp,cfg.hpKwh);
+  cfg.price=priceProfile(cfg.retail,cfg.kale,cfg.pv);
+  cfg.sched=evSchedule(cfg);
+  return cfg;
+}
+
+function run(){
+  syncLabels();
+  CFG=readCfg();
+  S=simulate(CFG);
+  MODES=["uncontrolled","night","solar","hybrid","price"].map(m=>({m,r:simulate(CFG,m)}));
+  draw();
+}
+
+function syncLabels(){
+  const set=(id,t)=>{const e=$(id); if(e) e.textContent=t;};
+  set("v_kwp",num("kwp").toFixed(2)+" kWp");
+  const a=num("az");
+  set("v_az", a===0?"South":(a<0?Math.abs(a)+"° east of south":a+"° west of south"));
+  set("v_tilt",num("tilt")+"°");
+  set("v_inv",num("inv").toFixed(2)+" kW");
+  set("v_base",num("base").toLocaleString()+" kWh/yr");
+  set("v_hpk",num("hpk").toLocaleString()+" kWh/yr");
+  set("v_office",num("office")+" of 5");
+  set("v_comm",num("comm")+" km");
+  set("v_wknd",num("wknd")+" km");
+  set("v_dep",String(num("dep")).padStart(2,"0")+":00");
+  set("v_arr",String(num("arr")).padStart(2,"0")+":00");
+  set("v_wpcp",num("wpcp").toFixed(0)+" ct/kWh");
+  set("v_cap",num("cap")+" kWh");
+  set("v_eff",num("eff").toFixed(1)+" kWh/100km");
+  set("v_ch",num("ch").toFixed(1)+" kW");
+  set("v_min",num("minch").toFixed(1)+" kW");
+  set("v_soc",num("soc")+"%");
+  set("v_bcap",num("bcap").toFixed(1)+" kWh");
+  set("v_bp",num("bp").toFixed(1)+" kW");
+  set("v_bre",num("bre")+"%");
+  set("v_bcost","€"+num("bcost").toLocaleString());
+  set("v_conn",num("conn").toFixed(1)+" kW");
+  set("v_retail",num("retail").toFixed(1)+" ct");
+  set("v_kale",num("kale").toFixed(1)+" ct");
+  set("v_tlv",num("tlv").toFixed(2)+" ct");
+  set("v_tlk",num("tlk").toFixed(2)+" ct");
+  $("hpBox").style.display=$("hp").checked?"block":"none";
+  $("batBox").style.display=$("bat").checked?"block":"none";
+  $("wpcBox").style.display=$("wpc").checked?"block":"none";
+  document.querySelectorAll('.seg [data-p]').forEach(b=>
+    b.setAttribute("aria-pressed", String(+b.dataset.p===num("office"))));
+}
+
+function setRegime(y){
+  REGIME=y;
+  $("reg2026").setAttribute("aria-pressed",String(y===2026));
+  $("reg2027").setAttribute("aria-pressed",String(y===2027));
+  $("regimeFlag").textContent="regime · "+y;
+  onSupplier();
+}
+function onSupplier(){
+  const s=SUPPLIERS[+$("supplier").value];
+  // Preselect this supplier's defaults; every field stays adjustable afterwards.
+  $("contract").value=s.contract;
+  if(REGIME===2026){ $("tlv").value=s.tlv26; $("tlk").value=0; }
+  else { $("tlv").value=s.g27; $("tlk").value=Math.max(0,+(s.g27-s.n27).toFixed(2)); }
+  run();
+}
+function setPersona(d){ $("office").value=d; run(); }
+
+/* ============================================================
+   DRAWING
+   ============================================================ */
+const NS="http://www.w3.org/2000/svg";
+const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+const eur=v=>(v<0?"−€":"€")+Math.abs(v).toLocaleString(undefined,{maximumFractionDigits:0});
+const kwh=v=>Math.round(v).toLocaleString();
+
+function avgDay(month,type){
+  const lanes={pv:new Array(24).fill(0),load:new Array(24).fill(0),ev:new Array(24).fill(0),
+               exp:new Array(24).fill(0),imp:new Array(24).fill(0),bat:new Array(24).fill(0),home:new Array(24).fill(0)};
+  let cnt=0;
+  for(let n=0;n<365;n++){
+    if(monthOf(n)!==month) continue;
+    if(S.dayType[n]!==type) continue;
+    cnt++;
+    for(let h=0;h<24;h++){const i=n*24+h;
+      lanes.pv[h]+=S.pv[i]; lanes.load[h]+=S.load[i]; lanes.ev[h]+=S.ev[i];
+      lanes.exp[h]+=S.exp[i]; lanes.imp[h]+=S.imp[i]; lanes.bat[h]+=S.bd[i]-S.bc[i];
+      lanes.home[h]+=S.home[i];}
+  }
+  if(cnt) for(const k in lanes) for(let h=0;h<24;h++) lanes[k][h]/=cnt;
+  return {lanes,cnt};
+}
+
+function drawRibbon(){
+  const svg=$("ribbon"); svg.innerHTML="";
+  const W=900, L=64, R=18, T=16;
+  const {lanes,cnt}=avgDay(+$("rmonth").value,$("rday").value);
+  if(!cnt){
+    const t1=el("text",{x:W/2,y:110,fill:"var(--ink-2)","text-anchor":"middle","font-size":13});
+    t1.textContent="This driver never has a "+$("rday").selectedOptions[0].textContent.toLowerCase()+".";
+    const t2=el("text",{x:W/2,y:134,fill:"var(--muted)","text-anchor":"middle","font-size":12});
+    t2.textContent="Change days in office, or pick another day type above.";
+    svg.appendChild(t1); svg.appendChild(t2);
+    $("mismatchNote").textContent="";
+    return;
+  }
+  const x=h=>L+(W-L-R)*h/24;
+  const peak=Math.max(0.5,...lanes.pv,...lanes.load.map((v,i)=>v+lanes.ev[i]));
+
+  /* lane 1: generation vs demand */
+  const h1=T, hh1=150;
+  const y1=v=>h1+hh1-(hh1-8)*v/peak;
+  // presence shading behind everything
+  for(let h=0;h<24;h++){
+    if(lanes.home[h]<0.5) continue;
+    svg.appendChild(el("rect",{x:x(h),y:h1,width:x(h+1)-x(h),height:hh1,fill:"#8B6FF0","fill-opacity":0.07}));
+  }
+  // gridlines
+  for(let g=0;g<=4;g++){
+    const yy=h1+hh1-(hh1-8)*g/4;
+    svg.appendChild(el("line",{x1:L,y1:yy,x2:W-R,y2:yy,class:"axis","stroke-opacity":g?0.5:1}));
+    const t=el("text",{x:L-8,y:yy+3,class:"gtick","text-anchor":"end"});
+    t.textContent=(peak*g/4).toFixed(1); svg.appendChild(t);
+  }
+  // solar area
+  let d="M"+x(0)+","+y1(0);
+  for(let h=0;h<24;h++){ d+=" L"+x(h)+","+y1(lanes.pv[h])+" L"+x(h+1)+","+y1(lanes.pv[h]); }
+  d+=" L"+x(24)+","+y1(0)+" Z";
+  svg.appendChild(el("path",{d,fill:"var(--solar)","fill-opacity":0.22,stroke:"var(--solar)","stroke-width":1.5}));
+  // stacked demand: house + ev
+  for(let h=0;h<24;h++){
+    const w=x(h+1)-x(h)-1;
+    if(lanes.load[h]>0.005) svg.appendChild(el("rect",{x:x(h)+0.5,y:y1(lanes.load[h]),width:w,height:Math.max(0,h1+hh1-y1(lanes.load[h])),fill:"var(--house)","fill-opacity":0.55}));
+    if(lanes.ev[h]>0.005) svg.appendChild(el("rect",{x:x(h)+0.5,y:y1(lanes.load[h]+lanes.ev[h]),width:w,height:Math.max(0,y1(lanes.load[h])-y1(lanes.load[h]+lanes.ev[h])),fill:"var(--ev)","fill-opacity":0.9}));
+  }
+  svg.appendChild(el("text",{x:L,y:h1-4,class:"lane-lab"})).textContent="kW — GENERATION vs DEMAND";
+
+  /* lane 2: grid exchange */
+  const h2=h1+hh1+46, hh2=88;
+  const gmax=Math.max(0.5,...lanes.exp,...lanes.imp);
+  const mid=h2+hh2/2;
+  const y2=v=>mid-(hh2/2-4)*v/gmax;
+  svg.appendChild(el("line",{x1:L,y1:mid,x2:W-R,y2:mid,class:"axis"}));
+  for(let h=0;h<24;h++){
+    const w=x(h+1)-x(h)-1;
+    if(lanes.exp[h]>0.005) svg.appendChild(el("rect",{x:x(h)+0.5,y:y2(lanes.exp[h]),width:w,height:mid-y2(lanes.exp[h]),fill:"var(--exp)"}));
+    if(lanes.imp[h]>0.005) svg.appendChild(el("rect",{x:x(h)+0.5,y:mid,width:w,height:mid-y2(lanes.imp[h]),fill:"var(--imp)","fill-opacity":0.85}));
+  }
+  svg.appendChild(el("text",{x:L,y:h2-6,class:"lane-lab"})).textContent="kW — EXPORTED (up) / IMPORTED (down)";
+  svg.appendChild(el("text",{x:L-8,y:y2(gmax)+3,class:"gtick","text-anchor":"end"})).textContent=gmax.toFixed(1);
+  svg.appendChild(el("text",{x:L-8,y:mid+3,class:"gtick","text-anchor":"end"})).textContent="0";
+
+  /* lane 3: presence strip */
+  const h3=h2+hh2+34;
+  svg.appendChild(el("text",{x:L,y:h3-7,class:"lane-lab"})).textContent="CAR PLUGGED IN AT HOME";
+  for(let h=0;h<24;h++){
+    svg.appendChild(el("rect",{x:x(h)+0.5,y:h3,width:x(h+1)-x(h)-1,height:16,
+      fill:lanes.home[h]>=0.5?"var(--ev)":"var(--panel-2)","fill-opacity":lanes.home[h]>=0.5?0.85:1}));
+  }
+  // hour axis
+  for(let h=0;h<=24;h+=3){
+    svg.appendChild(el("text",{x:x(h),y:h3+32,class:"gtick","text-anchor":"middle"})).textContent=String(h).padStart(2,"0");
+  }
+
+  /* mismatch note */
+  let solarWhileAway=0, solarTotal=0;
+  for(let h=0;h<24;h++){ solarTotal+=lanes.pv[h]; if(lanes.home[h]<0.5) solarWhileAway+=lanes.pv[h]; }
+  const pct=solarTotal>0?100*solarWhileAway/solarTotal:0;
+  $("mismatchNote").innerHTML=
+    `On an average <b>${$("rday").selectedOptions[0].textContent.toLowerCase()}</b> in ${MNAME[+$("rmonth").value]}, `+
+    `<b>${pct.toFixed(0)}%</b> of the day's generation lands while the car is away — `+
+    `${(solarWhileAway).toFixed(1)} of ${solarTotal.toFixed(1)} kWh. `+
+    `That share can only be captured by the household, a battery, or exported at the feed-in rate.`;
+}
+
+function drawMonthly(){
+  const svg=$("monthly"); svg.innerHTML="";
+  const W=900,L=52,R=18,T=14,B=34,Hh=260;
+  const m={house:new Array(12).fill(0),ev:new Array(12).fill(0),bat:new Array(12).fill(0),exp:new Array(12).fill(0)};
+  for(let n=0;n<365;n++){const mo=monthOf(n);
+    for(let h=0;h<24;h++){const i=n*24+h;
+      m.house[mo]+=S.toHouse[i]; m.ev[mo]+=S.toEv[i]; m.bat[mo]+=S.toBat[i]; m.exp[mo]+=S.exp[i];}}
+  const tot=m.house.map((v,i)=>v+m.ev[i]+m.bat[i]+m.exp[i]);
+  const peak=Math.max(1,...tot);
+  const bw=(W-L-R)/12;
+  const y=v=>T+(Hh-T-B)-(Hh-T-B)*v/peak;
+  for(let g=0;g<=4;g++){
+    const yy=T+(Hh-T-B)-(Hh-T-B)*g/4;
+    svg.appendChild(el("line",{x1:L,y1:yy,x2:W-R,y2:yy,class:"axis","stroke-opacity":g?0.5:1}));
+    svg.appendChild(el("text",{x:L-8,y:yy+3,class:"gtick","text-anchor":"end"})).textContent=Math.round(peak*g/4);
+  }
+  const cols=[["house","var(--house)"],["ev","var(--ev)"],["bat","var(--batt)"],["exp","var(--exp)"]];
+  for(let i=0;i<12;i++){
+    let acc=0;
+    for(const [k,c] of cols){
+      const v=m[k][i]; if(v<=0.01) continue;
+      svg.appendChild(el("rect",{x:L+i*bw+bw*0.16,y:y(acc+v),width:bw*0.68,height:Math.max(0,y(acc)-y(acc+v)),fill:c}));
+      acc+=v;
+    }
+    svg.appendChild(el("text",{x:L+i*bw+bw/2,y:Hh-14,class:"gtick","text-anchor":"middle"})).textContent=MSHORT[i];
+  }
+  svg.appendChild(el("text",{x:L,y:8,class:"lane-lab"})).textContent="kWh PER MONTH";
+}
+
+function drawTables(){
+  const t=S.totals;
+  const selfPct=t.pv>0?100*t.selfCons/t.pv:0;
+  const suff=(t.load+t.ev)>0?100*(t.selfCons+t.bd)/(t.load+t.ev):0;
+  const base=MODES.find(x=>x.m==="uncontrolled").r.totals.cost;
+
+  // headline
+  const dynActive=CFG.contract==="dynamic";
+  const dynAvg=CFG.dynBonus>0?6.0:4.0; // rough avg net export on dynamic
+  const netTlv=dynActive?dynAvg:(REGIME===2026?CFG.tlv-CFG.tlk:Math.max(0,CFG.tlv-CFG.tlk));
+  const spread=CFG.retail-netTlv;
+  $("verdict").innerHTML=`
+    <div class="vc"><div class="k">Annual energy cost</div><div class="v">${eur(t.cost)}</div>
+      <div class="d">${REGIME===2026?"with saldering":"post-saldering"} · ${CFG.contract}</div></div>
+    <div class="vc"><div class="k">vs. uncontrolled charging</div><div class="v ${t.cost<base?'pos':'neg'}">${t.cost<base?"−":"+"}${eur(Math.abs(base-t.cost))}</div>
+      <div class="d">saved per year by control</div></div>
+    <div class="vc"><div class="k">Self-consumption</div><div class="v">${selfPct.toFixed(0)}<span class="u">%</span></div>
+      <div class="d">${kwh(t.selfCons)} of ${kwh(t.pv)} kWh</div></div>
+    <div class="vc"><div class="k">Self-sufficiency</div><div class="v">${suff.toFixed(0)}<span class="u">%</span></div>
+      <div class="d">of ${kwh(t.load+t.ev)} kWh demand</div></div>
+    <div class="vc"><div class="k">Value of a solar kWh</div><div class="v warm">${spread.toFixed(1)}<span class="u">ct</span></div>
+      <div class="d">self-use ${CFG.retail.toFixed(1)} vs export ${dynActive?"~"+netTlv.toFixed(0)+" (hourly)":netTlv.toFixed(2)}</div></div>
+    <div class="vc"><div class="k">Peak grid draw</div><div class="v ${t.peak>CFG.connKw?'neg':''}">${t.peak.toFixed(1)}<span class="u">kW</span></div>
+      <div class="d">limit ${CFG.connKw.toFixed(1)} kW${t.peak>CFG.connKw?" — exceeded":""}</div></div>`;
+
+  // mode table
+  const names={uncontrolled:"Uncontrolled",night:"Night window",solar:"Solar surplus only",hybrid:"Solar + cheap-hour top-up",price:"Price-optimised"};
+  const tb=$("modeTable").querySelector("tbody"); tb.innerHTML="";
+  for(const {m,r} of MODES){
+    const d=base-r.totals.cost;
+    const tr=el("tr",{}); if(m===CFG.mode) tr.setAttribute("class","hl");
+    tr.innerHTML=`<td>${names[m]}${m===CFG.mode?' ·':''}</td>
+      <td class="num">${kwh(r.totals.selfCons)} kWh</td>
+      <td class="num">${kwh(r.totals.exp)} kWh</td>
+      <td class="num">${eur(r.totals.cost)}</td>
+      <td class="num ${d>0.5?'pos':(d<-0.5?'neg':'')}">${m==="uncontrolled"?"—":(d>0?"−":"+")+eur(Math.abs(d))}</td>`;
+    tb.appendChild(tr);
+  }
+
+  // detail
+  const rows=[
+    ["Solar generated", kwh(t.pv)+" kWh"],
+    ["→ used in the house", kwh(t.toHouse)+" kWh"],
+    ["→ used by the car", kwh(t.toEv)+" kWh"],
+    ["→ stored in battery", kwh(t.toBat)+" kWh"],
+    ["→ exported to grid", kwh(t.exp)+" kWh"],
+    ["Household demand", kwh(t.load)+" kWh"],
+    ["EV charged at home", kwh(t.ev)+" kWh"],
+    ...(CFG.workplace?[["EV charged at workplace", kwh(t.workplaceKwh)+" kWh"]]:[]),
+    ["Imported from grid", kwh(t.imp)+" kWh"],
+    ["Import cost", eur(t.importCost)],
+    ["Feed-in revenue", "−"+eur(t.exportRev)],
+    ...(t.feedCost>0.5?[["Feed-in charges", eur(t.feedCost)]]:[]),
+    ...(t.wpCost>0.5?[["Workplace charging", eur(t.wpCost)]]:[]),
+    ["Net annual energy cost", eur(t.cost)],
+  ];
+  if(CFG.battery){
+    const noBat={...CFG,battery:false};
+    const nb=simulate(noBat).totals.cost;
+    const gain=nb-t.cost;
+    rows.push(["Battery saves", eur(gain)+" / yr"]);
+    rows.push(["Battery simple payback", gain>0?(CFG.bcost/gain).toFixed(1)+" yr":"never at this spread"]);
+  }
+  const db=$("detail").querySelector("tbody"); db.innerHTML="";
+  rows.forEach((r,i)=>{
+    const tr=el("tr",{}); if(r[0].startsWith("Net")||r[0].startsWith("Battery simple")) tr.setAttribute("class","hl");
+    tr.innerHTML=`<td>${r[0]}</td><td class="num">${r[1]}</td>`; db.appendChild(tr);
+  });
+}
+
+function drawSuppliers(){
+  const active=+$("supplier").value;
+  const tb=$("supTable").querySelector("tbody"); tb.innerHTML="";
+  SUPPLIERS.forEach((s,i)=>{
+    const tr=el("tr",{}); if(i===active) tr.setAttribute("class","hl");
+    const dyn=s.contract==="dynamic";
+    tr.innerHTML=`<td>${s.n}${i===active?' ·':''}</td>
+      <td>${dyn?"Dynamic":"Fixed / variable"}</td>
+      <td class="num">${dyn?"market":s.tlv26.toFixed(2)+" ct"}</td>
+      <td class="num">${dyn?"market + bonus":s.g27.toFixed(2)+" ct"}</td>
+      <td class="num">${dyn?"none":(s.g27-s.n27).toFixed(2)+" ct"}</td>
+      <td class="num">${dyn?"~"+s.n27.toFixed(0)+" ct avg":s.n27.toFixed(2)+" ct"}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function draw(){ drawRibbon(); drawMonthly(); drawTables(); drawSuppliers(); }
+
+/* ---------- init ---------- */
+(function init(){
+  const eneco=SUPPLIERS.findIndex(s=>s.n==="Eneco");
+  $("supplier").innerHTML=SUPPLIERS.map((s,i)=>`<option value="${i}"${i===eneco?" selected":""}>${s.n}</option>`).join("");
+  $("rmonth").innerHTML=MNAME.map((m,i)=>`<option value="${i}"${i===5?" selected":""}>${m}</option>`).join("");
+  setRegime(2027);
+})();
+</script>
+</body>
+</html>

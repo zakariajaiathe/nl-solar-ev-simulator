@@ -148,6 +148,9 @@ svg{display:block; width:100%; height:auto; overflow:visible}
 .sw{width:11px; height:11px; border-radius:2px; flex:none}
 
 table{width:100%; border-collapse:collapse; font-size:12.5px}
+/* Wide tables scroll inside their own card rather than squashing on narrow screens. */
+.tscroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
+.tscroll table{min-width:480px}
 th{
   text-align:left; font-family:"IBM Plex Mono",monospace; font-size:9.5px;
   letter-spacing:0.11em; text-transform:uppercase; color:var(--muted);
@@ -383,16 +386,18 @@ tr.hl td{color:var(--ink); font-weight:600}
   <section class="card">
     <h2>Control strategies compared</h2>
     <p class="note">Same house, same car, same tariff — only the charging logic changes. Costs are annual variable energy costs; the delta is against uncontrolled charging.</p>
-    <table id="modeTable">
-      <thead><tr>
-        <th>Strategy</th>
-        <th class="num">Self-consumed</th>
-        <th class="num">Exported</th>
-        <th class="num">Annual cost</th>
-        <th class="num">vs. uncontrolled</th>
-      </tr></thead>
-      <tbody></tbody>
-    </table>
+    <div class="tscroll">
+      <table id="modeTable">
+        <thead><tr>
+          <th>Strategy</th>
+          <th class="num">Self-consumed</th>
+          <th class="num">Exported</th>
+          <th class="num">Annual cost</th>
+          <th class="num">vs. uncontrolled</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </section>
 
   <section class="card">
@@ -768,6 +773,9 @@ function setPersona(d){ $("office").value=d; run(); }
    ============================================================ */
 const NS="http://www.w3.org/2000/svg";
 const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+// HTML counterpart of el(). Table rows must NOT be created in the SVG
+// namespace — an SVG <tr> is silently ignored by an HTML <tbody>.
+const hel=(t,a)=>{const e=document.createElement(t);for(const k in a)e.setAttribute(k,a[k]);return e;};
 const eur=v=>(v<0?"−€":"€")+Math.abs(v).toLocaleString(undefined,{maximumFractionDigits:0});
 const kwh=v=>Math.round(v).toLocaleString();
 
@@ -929,7 +937,7 @@ function drawTables(){
   const tb=$("modeTable").querySelector("tbody"); tb.innerHTML="";
   for(const {m,r} of MODES){
     const d=base-r.totals.cost;
-    const tr=el("tr",{}); if(m===CFG.mode) tr.setAttribute("class","hl");
+    const tr=hel("tr",{}); if(m===CFG.mode) tr.setAttribute("class","hl");
     tr.innerHTML=`<td>${names[m]}${m===CFG.mode?' ·':''}</td>
       <td class="num">${kwh(r.totals.selfCons)} kWh</td>
       <td class="num">${kwh(r.totals.exp)} kWh</td>
@@ -964,7 +972,7 @@ function drawTables(){
   }
   const db=$("detail").querySelector("tbody"); db.innerHTML="";
   rows.forEach((r,i)=>{
-    const tr=el("tr",{}); if(r[0].startsWith("Net")||r[0].startsWith("Battery simple")) tr.setAttribute("class","hl");
+    const tr=hel("tr",{}); if(r[0].startsWith("Net")||r[0].startsWith("Battery simple")) tr.setAttribute("class","hl");
     tr.innerHTML=`<td>${r[0]}</td><td class="num">${r[1]}</td>`; db.appendChild(tr);
   });
 }

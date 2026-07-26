@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#131A28; --panel:#1A2334; --line:#2C3853; --line-hi:#3E4D6E;
+  --ink:#E8ECF5; --ink-2:#B4C0D8; --muted:#7F8DAC;
+  --solar:#F7B32B; --ev:#8B6FF0; --exp:#34A9C4; --imp:#FF6B6B;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{width:1200px; height:630px; overflow:hidden}
+body{
+  background:var(--bg);
+  font-family:"IBM Plex Sans",-apple-system,sans-serif;
+  color:var(--ink);
+  display:flex; flex-direction:column;
+  padding:64px 72px 52px;
+  position:relative;
+}
+.kicker{
+  font-family:"IBM Plex Mono",monospace; font-size:19px; letter-spacing:0.14em;
+  text-transform:uppercase; color:var(--muted); margin-bottom:22px;
+}
+.kicker b{color:var(--solar); font-weight:600}
+h1{
+  font-family:"Space Grotesk",sans-serif; font-weight:700;
+  font-size:76px; letter-spacing:-0.025em; line-height:1.04;
+  margin-bottom:26px;
+}
+.sub{
+  font-size:29px; line-height:1.45; color:var(--ink-2); max-width:22em;
+}
+.sub b{color:var(--ink); font-weight:600}
+.chart{position:absolute; right:0; bottom:104px; left:0; height:150px}
+.chips{
+  position:absolute; left:72px; bottom:52px; right:72px;
+  display:flex; align-items:center; gap:28px;
+  font-family:"IBM Plex Mono",monospace; font-size:17px; color:var(--muted); white-space:nowrap;
+}
+.chip{display:flex; align-items:center; gap:10px; flex:none}
+.sw{width:16px; height:16px; border-radius:3px}
+.chips .url{margin-left:auto; color:var(--ink-2)}
+.flag{
+  position:absolute; top:64px; right:72px;
+  font-family:"IBM Plex Mono",monospace; font-size:19px; letter-spacing:0.1em;
+  text-transform:uppercase; color:var(--ink-2);
+  border:1px solid var(--line-hi); border-radius:4px; padding:10px 18px;
+}
+</style>
+</head>
+<body>
+  <div class="kicker">Netherlands · net metering ends <b>1 Jan 2027</b></div>
+  <div class="flag">2026 vs 2027</div>
+  <h1>Solar &amp; EV,<br>after saldering</h1>
+  <div class="sub">The car is away when the sun is up. See what that <b>mismatch</b> costs a household — and what <b>smart charging</b> wins back.</div>
+
+  <svg class="chart" viewBox="0 0 1200 150" preserveAspectRatio="none">
+    <!-- baseline -->
+    <line x1="0" y1="132" x2="1200" y2="132" stroke="#2C3853" stroke-width="2"/>
+    <!-- solar bell: peaks midday -->
+    <path d="M0,132 C220,132 320,118 420,76 C500,43 560,24 600,24 C640,24 700,43 780,76 C880,118 980,132 1200,132 Z"
+          fill="rgba(247,179,43,0.16)" stroke="#F7B32B" stroke-width="3.5"/>
+    <!-- car-at-home band: evening/night presence, away midday -->
+    <path d="M0,132 L0,68 L330,68 C368,68 380,110 420,120 L780,120 C820,110 832,58 870,58 L1200,58 L1200,132 Z"
+          fill="rgba(139,111,240,0.14)" stroke="#8B6FF0" stroke-width="3.5"/>
+  </svg>
+
+  <div class="chips">
+    <span class="chip"><span class="sw" style="background:#F7B32B"></span>solar generation</span>
+    <span class="chip"><span class="sw" style="background:#8B6FF0"></span>car plugged in at home</span>
+    <span class="url">zakariajaiathe.github.io/nl-solar-ev-simulator</span>
+  </div>
+</body>
+</html>

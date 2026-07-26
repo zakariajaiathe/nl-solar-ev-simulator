@@ -914,6 +914,12 @@ function drawTables(){
   const base=MODES.find(x=>x.m==="uncontrolled").r.totals.cost;
 
   // headline
+  // Control-vs-baseline tile: label follows the sign, so "saved" never
+  // appears next to a cost increase (night charging can lose to uncontrolled).
+  const dCtl=base-t.cost; // >0 = the selected strategy is cheaper than charging on arrival
+  const ctl = dCtl>0.5  ? {cls:"pos", v:eur(dCtl),              d:"saved per year vs. charging on arrival"}
+            : dCtl<-0.5 ? {cls:"neg", v:"+"+eur(Math.abs(dCtl)), d:"extra per year vs. charging on arrival"}
+            :             {cls:"",    v:"€0",                    d:"uncontrolled is the baseline"};
   const dynActive=CFG.contract==="dynamic";
   const dynAvg=4.0; // rough avg net export value on a dynamic contract
   const netTlv=dynActive?dynAvg:(REGIME===2026?CFG.tlv-CFG.tlk:Math.max(0,CFG.tlv-CFG.tlk));
@@ -921,8 +927,8 @@ function drawTables(){
   $("verdict").innerHTML=`
     <div class="vc"><div class="k">Annual energy cost</div><div class="v">${eur(t.cost)}</div>
       <div class="d">${REGIME===2026?"with saldering":"post-saldering"} · ${CFG.contract}</div></div>
-    <div class="vc"><div class="k">vs. uncontrolled charging</div><div class="v ${t.cost<base?'pos':'neg'}">${t.cost<base?"−":"+"}${eur(Math.abs(base-t.cost))}</div>
-      <div class="d">saved per year by control</div></div>
+    <div class="vc"><div class="k">vs. uncontrolled charging</div><div class="v ${ctl.cls}">${ctl.v}</div>
+      <div class="d">${ctl.d}</div></div>
     <div class="vc"><div class="k">Self-consumption</div><div class="v">${selfPct.toFixed(0)}<span class="u">%</span></div>
       <div class="d">${kwh(t.selfCons)} of ${kwh(t.pv)} kWh</div></div>
     <div class="vc"><div class="k">Self-sufficiency</div><div class="v">${suff.toFixed(0)}<span class="u">%</span></div>
